@@ -25,6 +25,8 @@
   - [9.5. D5. Acceptance criteria quality](#95-d5-acceptance-criteria-quality)
   - [9.6. D6. Outcome-to-task alignment](#96-d6-outcome-to-task-alignment)
   - [9.7. D7. Structural compliance](#97-d7-structural-compliance)
+  - [9.8. D8. Practical feasibility](#98-d8-practical-feasibility)
+  - [9.9. D9. Student experience level fit](#99-d9-student-experience-level-fit)
 - [10. Checklist](#10-checklist)
 
 Use this file when creating or reviewing a lab plan (`instructors/lab-plan.md`).
@@ -297,6 +299,21 @@ Severity guide:
 - Are summaries two to four sentences?
 - Are `---` rules present between tasks?
 
+### 9.8. D8. Practical feasibility
+
+- Can each task be completed within a single lab session (roughly two to three hours for all required tasks combined)?
+- Are the required tools, services, and environments realistically available to students (no paid accounts, no complex infrastructure)?
+- Are there tasks that depend on external services with rate limits, approval queues, or uptime risks?
+- Is the scope of each task well-bounded, or could it expand unpredictably during implementation?
+
+### 9.9. D9. Student experience level fit
+
+- Can a student with basic programming knowledge and limited prior exposure to the topic complete the required tasks?
+- Does task 1 provide enough scaffolding (examples, reference commands, expected output) to onboard students who are new to the domain?
+- Are there tasks that assume advanced knowledge without introducing it first (e.g., complex CLI flags, non-trivial configuration formats, unfamiliar protocols)?
+- Is the cognitive jump between consecutive tasks manageable, or does difficulty spike abruptly?
+- Does the optional task clearly signal that it targets students who want a deeper challenge?
+
 ---
 
 ## 10. Checklist
@@ -319,3 +336,7 @@ Severity guide:
 - [ ] Acceptance criteria use plain bullets (`-`), not checkboxes (`- [ ]`).
 - [ ] `---` rules separate tasks within a section.
 - [ ] All sentences end with `.`.
+- [ ] All required tasks are completable within a single lab session.
+- [ ] No task depends on paid services, complex infrastructure, or unreliable external resources.
+- [ ] Task 1 is approachable for students with limited prior exposure to the topic.
+- [ ] Difficulty increases gradually across required tasks without abrupt spikes.
