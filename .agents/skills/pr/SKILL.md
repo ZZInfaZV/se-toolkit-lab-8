@@ -20,12 +20,9 @@ Create or update a pull request following the project's PR template at `.github/
 - Use `gh pr create` with `--title` and `--body` to open the PR.
 - Target the `main` branch (`--base main`).
 - Do not mark any checklist items. Leave all checkboxes unchecked (`[ ]`) for the user to review and check manually.
-- Do not push or create the PR without showing the user the title and body first and asking for confirmation.
-- After the PR is created, suggest that the user edit the PR description directly on GitHub (provide the PR URL) to add any additional context or refine the auto-generated summary.
+- Do not push or create the PR without showing the user the complete `gh pr create` command first (using a heredoc for the body) and asking for confirmation. The user can edit the command before approving it.
 
 ### Updating an existing PR
 
 - Regenerate the PR title and body using the same rules as for a new PR (concise title, imperative bullet list derived from all commits, checklist unchecked).
-- Show the user the updated title and body and ask for confirmation before applying.
-- Use `gh pr edit` with `--title` and `--body` to update the existing PR.
-- After updating, suggest that the user review and further edit the PR description directly on GitHub (provide the PR URL).
+- Show the user the complete `gh pr edit` command (using a heredoc for the body) and ask for confirmation. The user can edit the command before approving it.
