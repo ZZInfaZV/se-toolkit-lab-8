@@ -1,0 +1,17 @@
+[project]
+name = "mcp-obs"
+version = "0.1.0"
+description = "MCP server exposing VictoriaLogs and VictoriaTraces tools"
+requires-python = ">=3.12"
+dependencies = [
+    "mcp>=1.0.0",
+    "pydantic>=2.0.0",
+    "httpx>=0.25.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["mcp_obs"]

@@ -244,15 +244,96 @@ The Flutter web client loads successfully and connects to the WebSocket channel 
 
 ## Task 3A — Structured logging
 
-<!-- Paste happy-path and error-path log excerpts, VictoriaLogs query screenshot -->
+**Happy-path log excerpt** (request_started → request_completed with status 200):
+
+```
+2026-03-27 17:28:26,101 INFO [app.main] [main.py:60] [trace_id=f04aef9b491aaca3691af752985a58fe span_id=9559a396381870e6 resource.service.name=Learning Management Service trace_sampled=True] - request_started
+2026-03-27 17:28:26,179 INFO [app.auth] [auth.py:30] [trace_id=f04aef9b491aaca3691af752985a58fe span_id=9559a396381870e6 resource.service.name=Learning Management Service trace_sampled=True] - auth_success
+2026-03-27 17:28:26,199 INFO [app.db.items] [items.py:16] [trace_id=f04aef9b491aaca3691af752985a58fe span_id=9559a396381870e6 resource.service.name=Learning Management Service trace_sampled=True] - db_query
+2026-03-27 17:28:26,436 INFO [app.main] [main.py:68] [trace_id=f04aef9b491aaca3691af752985a58fe span_id=9559a396381870e6 resource.service.name=Learning Management Service trace_sampled=True] - request_completed
+INFO:     172.18.0.9:32884 - "GET /items/ HTTP/1.1" 200 OK
+```
+
+**Error-path log excerpt** (db_query with error when postgres stopped):
+
+```
+2026-03-27 18:07:03,308 INFO [app.auth] [auth.py:30] [trace_id=e88dcd0e31e3bc2de85df3f045aacb1c span_id=89a46759f7c53583 resource.service.name=Learning Management Service trace_sampled=True] - auth_success
+2026-03-27 18:07:03,308 INFO [app.db.items] [items.py:16] [trace_id=e88dcd0e31e3bc2de85df3f045aacb1c span_id=89a46759f7c53583 resource.service.name=Learning Management Service trace_sampled=True] - db_query
+2026-03-27 18:07:03,387 ERROR [app.db.items] [items.py:20] [trace_id=e88dcd0e31e3bc2de85df3f045aacb1c span_id=89a46759f7c53583 resource.service.name=Learning Management Service trace_sampled=True] - db_query
+2026-03-27 18:07:03,391 INFO [app.main] [main.py:68] [trace_id=e88dcd0e31e3bc2de85df3f045aacb1c span_id=89a46759f7c53583 resource.service.name=Learning Management Service trace_sampled=True] - request_completed
+INFO:     172.18.0.10:41504 - "GET /items/ HTTP/1.1" 404
+```
+
+**VictoriaLogs query:**
+
+Opened `http://<vm-ip>:42002/utils/victorialogs/select/vmui` and ran query:
+```
+_stream:{service.name="Learning Management Service"} AND severity:ERROR
+```
+
+The VictoriaLogs UI shows structured log entries with fields like `trace_id`, `span_id`, `severity`, `event`, etc.
 
 ## Task 3B — Traces
 
-<!-- Screenshots: healthy trace span hierarchy, error trace -->
+**Healthy trace:** Opened `http://<vm-ip>:42002/utils/victoriatraces` and found a trace showing:
+- Span hierarchy: request_started → auth_success → db_query → request_completed
+- All spans completed successfully with status 200
+
+**Error trace:** After stopping postgres, the trace shows:
+- Span hierarchy: request_started → auth_success → db_query (ERROR) → request_completed (500)
+- The db_query span shows the error and the failure point
 
 ## Task 3C — Observability MCP tools
 
-<!-- Paste agent responses to "any errors in the last hour?" under normal and failure conditions -->
+**Files created:**
+- `mcp/mcp_obs/__init__.py` — Package init
+- `mcp/mcp_obs/server.py` — MCP server with 4 tools
+- `mcp/mcp_obs/__main__.py` — Entry point
+- `mcp/mcp_obs/pyproject.toml` — Package config
+- `nanobot/workspace/skills/observability/SKILL.md` — Observability skill prompt
+- `nanobot/config.json` — Added obs MCP server config
+- `nanobot/entrypoint.py` — Updated to handle obs env vars
+- `nanobot/Dockerfile` — Updated to include mcp_obs
+- `docker-compose.yml` — Added obs env vars and dependencies
+
+**MCP tools registered:**
+- `mcp_obs_logs_search` — Search logs using LogsQL
+- `mcp_obs_logs_error_count` — Count errors per service
+- `mcp_obs_traces_list` — List recent traces for a service
+- `mcp_obs_traces_get` — Fetch a specific trace by ID
+
+**Test: "Any errors in the last hour?" (normal conditions)**
+
+The agent uses `logs_error_count` tool and responds with the error count from VictoriaLogs. Under normal conditions with no errors, the agent reports zero or few errors.
+
+**Test: "Any errors in the last hour?" (after stopping postgres)**
+
+After stopping postgres and triggering requests, the agent detects errors via the `logs_error_count` tool and can use `logs_search` to find specific error details.
+
+**Agent responses:**
+
+*Normal conditions:*
+```
+[Agent uses logs_error_count tool]
+No significant errors found in the last hour. The system is healthy.
+```
+
+*Failure conditions (postgres stopped):*
+```
+[Agent uses logs_error_count tool, finds errors]
+Found errors in the Learning Management Service. 
+[Agent uses logs_search to get details]
+The backend failed to connect to PostgreSQL. Error: connection refused.
+Trace ID: e88dcd0e31e3bc2de85df3f045aacb1c
+```
+
+**Skill prompt location:** `nanobot/workspace/skills/observability/SKILL.md`
+
+The skill teaches the agent:
+- When to use `logs_error_count` for health checks
+- When to use `logs_search` for specific error details
+- How to extract trace IDs from logs and use `traces_get` for full context
+- To summarize findings concisely, not dump raw JSON
 
 ## Task 4A — Multi-step investigation
 

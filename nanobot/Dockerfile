@@ -18,6 +18,7 @@ ENV UV_PYTHON_DOWNLOADS=0
 WORKDIR /app
 COPY --from=workspace pyproject.toml uv.lock /app/
 COPY --from=workspace nanobot/pyproject.toml /app/nanobot/pyproject.toml
+COPY --from=workspace mcp/mcp_obs/pyproject.toml /app/mcp/mcp_obs/pyproject.toml
 
 RUN --mount=type=cache,target=/root/.cache/uv \
     uv sync --frozen --no-install-workspace --package nanobot
@@ -49,7 +50,7 @@ COPY --from=builder --chown=nonroot:nonroot /app /app
 
 # Place executables in the environment at the front of the path
 ENV PATH="/app/.venv/bin:$PATH"
-ENV PYTHONPATH="/app/nanobot"
+ENV PYTHONPATH="/app/nanobot:/app/mcp"
 
 USER nonroot
 
