@@ -21,24 +21,18 @@ Start by reading the [official nanobot repository](https://github.com/HKUDS/nano
 
 ### What to do in Part A
 
-1. Add nanobot as a git submodule so the framework source is visible in the project:
-
-   ```terminal
-   git submodule add https://github.com/HKUDS/nanobot.git packages/nanobot-ai
-   ```
-
-2. Create a repo-local `nanobot/` project and install the framework there:
+1. Create a repo-local `nanobot/` project and install the framework there from the official repository at the lab-tested commit:
 
    ```terminal
    uv init nanobot
    cd nanobot
-   uv add nanobot-ai --path ../packages/nanobot-ai
+   uv add "nanobot-ai @ git+https://github.com/HKUDS/nanobot.git@e7d371ec1e6531b28898ec2c869ef338e8dd46ec"
    ```
 
    From this point on, treat `nanobot/` inside the repository as the source of truth for this lab.
    Later tasks should build on this same project instead of copying state from your home directory.
 
-3. Run the onboard wizard inside the repo-local project to generate the initial configuration and workspace:
+2. Run the onboard wizard inside the repo-local project to generate the initial configuration and workspace:
 
    ```terminal
    cd nanobot
@@ -53,7 +47,7 @@ Start by reading the [official nanobot repository](https://github.com/HKUDS/nano
    This generates `nanobot/config.json` and a workspace at `nanobot/workspace`.
    Task 2 will Dockerize this same repo-local project.
 
-4. Chat with the repo-local agent in the terminal on your VM:
+3. Chat with the repo-local agent in the terminal on your VM:
 
    ```terminal
    cd nanobot
@@ -67,7 +61,7 @@ Start by reading the [official nanobot repository](https://github.com/HKUDS/nano
 
    The agent answers general questions well, but it has no idea about the LMS — it will hallucinate or say it doesn't know. That's expected — it has no tools yet.
 
-5. Try a single-message query:
+4. Try a single-message query:
 
    ```terminal
    cd nanobot
@@ -190,7 +184,7 @@ The agent works, but it could be smarter about *how* it uses tools. A **skill pr
 
 ## Acceptance criteria
 
-- Nanobot source is added as a submodule at `packages/nanobot-ai` and configured in the repo-local `nanobot/` project via `nanobot onboard --config ./config.json --workspace ./workspace`.
+- Nanobot is installed in the repo-local `nanobot/` project from the official GitHub repository at commit `e7d371ec1e6531b28898ec2c869ef338e8dd46ec`, and configured via `nanobot onboard --config ./config.json --workspace ./workspace`.
 - The agent responds to general questions via the repo-local `nanobot/config.json`.
 - MCP tools are configured and the agent returns real backend data.
 - A skill prompt exists that guides the agent's tool usage.
