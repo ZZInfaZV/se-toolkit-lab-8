@@ -187,11 +187,60 @@ The skill prompt teaches the agent:
 
 ## Task 2A — Deployed agent
 
-<!-- Paste a short nanobot startup log excerpt showing the gateway started inside Docker -->
+**Nanobot gateway startup logs:**
+
+```
+nanobot-1  | Using config: /app/nanobot/config.resolved.json
+nanobot-1  |  Starting nanobot gateway version 0.1.4.post5 on port 18790...
+nanobot-1  | 2026-03-27 17:21:31.659 | DEBUG    | nanobot.channels.registry:discover_all:64 - Skipping built-in channel 'matrix': Matrix dependencies not installed.
+nanobot-1  | 2026-03-27 17:21:32.080 | INFO     | nanobot.channels.manager:_init_channels:54 - WebChat channel enabled
+nanobot-1  | ✓ Channels enabled: webchat
+nanobot-1  | ✓ Heartbeat: every 1800s
+nanobot-1  | 2026-03-27 17:21:32.086 | INFO     | nanobot.cron.service:start:182 - Cron service started with 0 jobs
+nanobot-1  | 2026-03-27 17:21:32.087 | INFO     | nanobot.heartbeat.service:start:122 - Heartbeat started (every 1800s)
+nanobot-1  | 2026-03-27 17:21:32.426 | INFO     | nanobot.channels.manager:start_all:87 - Starting webchat channel...
+nanobot-1  | 2026-03-27 17:21:32.427 | INFO     | nanobot.channels.manager:_dispatch_outbound:115 - Outbound dispatcher started
+nanobot-1  | 2026-03-27 17:21:32.427 | INFO     | nanobot_webchat.channel:start:72 - WebChat starting on 0.0.0.0:8765
+nanobot-1  | 2026-03-27 17:21:34.050 | DEBUG    | nanobot.agent.tools.mcp:connect_mcp_servers:162 - MCP: registered tool 'mcp_lms_lms_health' from server 'lms'
+nanobot-1  | ... (9 MCP tools registered)
+nanobot-1  | 2026-03-27 17:21:34.050 | INFO     | nanobot.agent.tools.mcp:connect_mcp_servers:182 - MCP server 'lms': connected, 9 tools registered
+nanobot-1  | 2026-03-27 17:21:34.050 | INFO     | nanobot.agent.loop:run:260 - Agent loop started
+```
+
+**Files created/modified:**
+- `nanobot/entrypoint.py` — resolves env vars and launches `nanobot gateway`
+- `nanobot/Dockerfile` — multi-stage build with uv
+- `docker-compose.yml` — enabled nanobot service with container-local URLs
+- `caddy/Caddyfile` — added `/ws/chat` reverse proxy route
 
 ## Task 2B — Web client
 
-<!-- Screenshot of a conversation with the agent in the Flutter web app -->
+**WebSocket test:**
+
+```bash
+echo '{"content":"What labs are available?"}' | websocat 'ws://localhost:42002/ws/chat?access_key=my-secret-nanobot-key'
+```
+
+**Agent response (from logs):**
+```
+Here are the available labs:
+
+| ID | Title |
+|----|-------|
+| 1 | Lab 01 – Products, Architecture & Roles |
+| 2 | Lab 02...
+```
+
+**Flutter UI:** Accessible at `http://<vm-ip>:42002/flutter/`
+
+The Flutter web client loads successfully and connects to the WebSocket channel protected by `NANOBOT_ACCESS_KEY`.
+
+**Files created/modified:**
+- `nanobot-websocket-channel/` — git submodule added
+- `nanobot/pyproject.toml` — added `nanobot-webchat` dependency
+- `nanobot/config.json` — enabled webchat channel
+- `docker-compose.yml` — enabled `client-web-flutter` service and caddy volume mount
+- `caddy/Caddyfile` — added `/flutter` route
 
 ## Task 3A — Structured logging
 
