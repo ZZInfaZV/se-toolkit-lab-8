@@ -44,6 +44,15 @@ def resolve_config():
             if api_key:
                 config["tools"]["mcpServers"]["lms"]["env"]["NANOBOT_LMS_API_KEY"] = api_key
 
+        if "obs" in config["tools"]["mcpServers"]:
+            victorialogs_url = os.environ.get("VICTORIALOGS_URL")
+            victoriatraces_url = os.environ.get("VICTORIATRACES_URL")
+
+            if victorialogs_url:
+                config["tools"]["mcpServers"]["obs"]["env"]["VICTORIALOGS_URL"] = victorialogs_url
+            if victoriatraces_url:
+                config["tools"]["mcpServers"]["obs"]["env"]["VICTORIATRACES_URL"] = victoriatraces_url
+
     # Write resolved config
     with open(resolved_path, "w") as f:
         json.dump(config, f, indent=2)
