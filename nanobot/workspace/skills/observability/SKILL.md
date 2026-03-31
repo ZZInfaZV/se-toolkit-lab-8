@@ -9,7 +9,7 @@ You have access to observability tools that let you query **VictoriaLogs** and *
 - **`logs_search`** — Search logs using LogsQL queries
   - Use when: User asks about specific errors, events, or trace IDs
   - Parameters:
-    - `query`: LogsQL query (e.g., `_stream:{service="backend"} AND level:error`)
+    - `query`: LogsQL query (e.g., `_stream:{service.name="Learning Management Service"} AND severity:ERROR`)
     - `limit`: Max entries (default 30)
     - `start`: Start time like "1h", "30m" (default: 1 hour ago)
     - `end`: End time (default: now)
@@ -17,7 +17,7 @@ You have access to observability tools that let you query **VictoriaLogs** and *
 - **`logs_error_count`** — Count errors per service over a time window
   - Use when: User asks "any errors?", "system health", "error summary"
   - Parameters:
-    - `service`: Filter by service name (optional, empty = all services)
+    - `service`: Filter by service name (optional, empty = all services). Use "Learning Management Service" for the LMS backend.
     - `window`: Time window like "1h", "30m", "24h" (default: 1h)
 
 ### Trace Tools (VictoriaTraces)
@@ -48,12 +48,42 @@ You have access to observability tools that let you query **VictoriaLogs** and *
 2. **Extract the trace ID** — Look for `trace_id=xxx` in log entries
 3. **Use `traces_get`** — Fetch the full trace to see the span hierarchy and timing
 
-### When the user asks "what went wrong?"
+### When the user asks "what went wrong?" or "check system health"
 
-1. **Call `logs_error_count`** — Check for recent errors
-2. **Call `logs_search`** — Search for error-level logs in the last hour
-3. **If you find trace IDs, call `traces_get`** — Get the full failure context
-4. **Summarize findings** — Tell the user what failed, where, and when
+This is a **one-shot investigation** — chain the tools together in a single coherent response:
+
+1. **Call `logs_error_count`** with `window="5m"` or `window="1h"` — Check for recent errors and identify which service is affected
+   - For LMS backend errors, use `service="Learning Management Service"`
+2. **Call `logs_search`** with a query targeting the affected service — Search for error-level logs to find:
+   - The error message
+   - The timestamp
+   - A trace ID (look for `trace_id` or `otelTraceID` field in the log entry)
+   - Use query: `_stream:{service.name="Learning Management Service"} AND severity:ERROR`
+3. **If you found a trace ID, call `traces_get`** — Fetch the full trace to see:
+   - The span hierarchy (which operations were called)
+   - Which span failed (look for error tags or status=ERROR)
+   - The root cause (database connection failure, timeout, etc.)
+4. **Summarize findings concisely** — Report:
+   - **What failed**: The operation or endpoint
+   - **When**: Timestamp of the failure
+   - **Why**: The root cause error message
+   - **Evidence**: Reference both log and trace data
+   - **Trace ID**: Include for further investigation
+
+**Example response format:**
+```
+🔴 **System Failure Detected**
+
+**What**: Backend `/items/` endpoint returned 500
+**When**: 2 minutes ago (14:32:15 UTC)
+**Why**: PostgreSQL connection refused — database is down
+
+**Evidence**:
+- Logs: Found 3 errors in Learning Management Service with "connection refused"
+- Trace: `abc123...` shows db_query span failed with status=ERROR
+
+The backend cannot reach PostgreSQL. Check if the database container is running.
+```
 
 ## Response Format
 
@@ -66,14 +96,14 @@ You have access to observability tools that let you query **VictoriaLogs** and *
 
 **User:** "Any errors in the last hour?"
 
-**You:** Call `logs_error_count` with `window="1h"`. Report:
+**You:** Call `logs_error_count` with `window="1h"` and `service="Learning Management Service"`. Report:
 - Total error count
 - Which services had errors
 - Most common error types (if visible)
 
 **User:** "Show me errors from the backend"
 
-**You:** Call `logs_search` with `query='_stream:{service="backend"} AND level:error'` and `limit=20`. Summarize the error messages found.
+**You:** Call `logs_search` with `query='_stream:{service.name="Learning Management Service"} AND severity:ERROR'` and `limit=20`. Summarize the error messages found.
 
 **User:** "What happened to request abc123?"
 
